@@ -1,0 +1,40 @@
+.navbar {
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    &.light {
+        border-top: 1px solid black;
+    }
+    &.dark {
+        border-top: 1px solid white;
+    }
+}
+
+.navbar a {
+    text-decoration: none;
+    font-size: 16px;
+    &.light {
+        background-color: white;
+        color: black;
+    }
+    &.dark {
+        color: white;
+        background-color: black;
+    }
+}
+
+.navbar-item {
+    border: 0;
+    padding: 12px 6px;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+.page {
+    padding-bottom: 60px;
+    text-align: center;
+}
