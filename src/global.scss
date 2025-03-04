@@ -106,10 +106,87 @@
         .ant-select-arrow {
             color: var(--text-dark) !important;
         }
-        .input-label {
+    }
+}
+
+.filter-form {
+    &.dark {
+        .ant-input {
+            background-color: var(--secondary-dark) !important;
             color: var(--text-dark) !important;
-            width: 100%;
         }
+        .ant-input::placeholder {
+            color: #ffffff90 !important;
+        }
+        .ant-select-selection-placeholder {
+            color: #ffffff90 !important;
+        }
+        .ant-select-selector {
+            text-align: left;
+            background: var(--secondary-dark) !important;
+            color: var(--text-dark) !important;
+        }
+        .ant-select-dropdown {
+            background: var(--secondary-dark) !important;
+            background-color: var(--secondary-dark) !important;
+            color: var(--text-dark) !important;
+        }
+        .ant-select-item {
+            background: var(--secondary-dark) !important;
+            background-color: var(--secondary-dark) !important;
+            color: var(--text-dark) !important;
+        }
+        .ant-select-open {
+            .ant-select-selection-item {
+                background: var(--secondary-dark) !important;
+                background-color: var(--secondary-dark) !important;
+                color: var(--text-dark) !important;
+            }
+        }
+        .ant-select-arrow {
+            color: var(--text-dark) !important;
+        }
+    }
+}
+
+.collapse {
+    .ant-collapse-content-box {
+        padding-top: 0 !important;
+    }
+    &.light {
+        .ant-collapse-expand-icon {
+            color: var(--text-light) !important;    
+        }
+    }
+    &.dark {
+        .ant-collapse-expand-icon {
+            color: var(--text-dark) !important;
+        }
+    }
+}
+
+.input-label {
+    text-align: left;
+    &.light {
+        color: var(--text-light) !important;
+    }
+    &.dark {
+        color: var(--text-dark) !important;
+    }
+}
+
+.heading-label {
+    text-align: left;
+    line-height: 22px;
+    &.light {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text-light) !important;
+    }
+    &.dark {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text-dark) !important;
     }
 }
 

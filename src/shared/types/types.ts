@@ -4,13 +4,14 @@ export interface Client {
     name: string;
     description: string;
     tag: TagType;
+    hasDeal: boolean;
     createdAt: Date;
 }
 
 export interface Contact {
     id: string;
     clientId: string;
-    type: ContactType;
+    contactType: ContactType;
     contact: string;
 }
 
@@ -20,13 +21,23 @@ export interface ClientWithContacts {
 }
 
 export enum ContactType {
-    EMAIL = 'EMAIL',
-    PHONE = 'PHONE',
+    EMAIL = 'Почта',
+    PHONE = 'Телефон',
     VK = 'VK',
-    TELEGRAM = 'TELEGRAM',
-    WHATSAPP = 'WHATSAPP',
-    SKYPE = 'SKYPE',
-    OTHER = 'OTHER',
+    TELEGRAM = 'Телеграм',
+    WHATSAPP = 'WhatsApp',
+    INSTAGRAM = 'Instagram',
+    OTHER = 'Другой',
+}
+
+export enum ContactColor {
+    EMAIL = '#657786',
+    PHONE = '#19a7a4',
+    VK = 'blue',
+    TELEGRAM = '#229ED9',
+    WHATSAPP = '#25D366',
+    INSTAGRAM = '#833AB4',
+    OTHER = 'gray',
 }
 
 export enum TagType {

@@ -1,10 +1,11 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Modal, Select, Table, Typography } from 'antd';
+import { Button, Card, Collapse, Input, Modal, Select, Table, Typography } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import React, { useCallback, useEffect, useState } from 'react';
-import { createDeal, getAllClients, getAllDeals, refreshTokens } from '../../api';
+import { createDeal, getAllClients, getAllDeals } from '../../api';
 import { useThemeStore } from '../../shared/stores/theme';
 import { ClientWithContacts, Deal } from '../../shared/types/types';
+import DealFilterForm from './DealFilterForm';
 
 const DealsListPage: React.FC = () => {
     const theme = useThemeStore((x) => x.theme);
@@ -19,60 +20,46 @@ const DealsListPage: React.FC = () => {
     const [income, setIncome] = useState('');
     const [currency, setCurrency] = useState('');
     const [notes, setNotes] = useState('');
+    const [titleFilter, setTitleFilter] = useState('');
+    const [clientIdFilter, setClientIdFilter] = useState('');
+    const [incomeFilter, setIncomeFilter] = useState('');
+    const [currencyFilter, setCurrencyFilter] = useState('');
 
     useEffect(() => {
-        fetchDeals();
+        fetchDeals(
+            titleFilter,
+            clientIdFilter,
+            incomeFilter,
+            currencyFilter
+        );
         fetchClients();
-    }, []);
+    }, [titleFilter, clientIdFilter, incomeFilter, currencyFilter]);
 
-    const fetchDeals = useCallback(async () => {
-        const data = await getAllDeals(page, size);
-        if (data.status === 401) {
-            refreshTokens();
-            const newData = await getAllDeals(page, size);
-            setDeals(newData.data);
-            setTotal(newData.totalCount);
-        } else {
-            setDeals(data.data);
-            setTotal(data.totalCount);
-        }
+    const fetchDeals = useCallback(async (title?: string, clientId?: string, income?: string, currency?: string) => {
+        const data = await getAllDeals(page, size, title, clientId, income, currency);
+        setDeals(data.data);
+        setTotal(data.totalCount);
     }, [page, size]);
 
     const fetchClients = async () => {
         const data = await getAllClients(1, 1500);
-        if (data.status === 401) {
-            refreshTokens();
-            await fetchClients();
-        } else {
-            setClients(data.data);
-        }
+        setClients(data.data);
     };
 
     const handleCreateDeal = async () => {
-        const data = await createDeal({
+        await createDeal({
             clientId,
             title,
             income,
             currency,
             notes,
         });
-        if (data.status === 401) {
-            refreshTokens();
-            await createDeal({
-                clientId,
-                title,
-                income,
-                currency,
-                notes,
-            });
-        } else {
-            fetchDeals();
-            setTitle('');
-            setIncome('');
-            setCurrency('');
-            setClientId('');
-            setNotes('');  
-        }
+        fetchDeals();
+        setTitle('');
+        setIncome('');
+        setCurrency('');
+        setClientId('');
+        setNotes('');  
         setNotes('');  
     };
 
@@ -103,6 +90,19 @@ const DealsListPage: React.FC = () => {
                 }}>
                 <b>Количество сделок:</b> {total}
             </Card>
+            <Collapse ghost className={`collapse ${theme}`}  items={[
+                {
+                    key: '1',
+                    label: <Typography className={`heading-label ${theme}`}>Фильтры:</Typography>,
+                    children: <DealFilterForm 
+                        changeClient={setClientIdFilter}
+                        changeCurrency={setCurrencyFilter}
+                        changeIncome={setIncomeFilter}
+                        changeTitle={setTitleFilter}
+                        clients={clients.map(client => ({ id: client.client.id, name: client.client.name }))}
+                    />,
+                },
+            ]} />
             <Button 
                 type='primary' 
                 style={{ marginBottom: '10px', width: '100%', padding: '10px', backgroundColor: 'var(--accent-blue)',
