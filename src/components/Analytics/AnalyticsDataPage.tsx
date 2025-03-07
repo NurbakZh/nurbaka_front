@@ -7,7 +7,6 @@ const AnalyticsDataPage: React.FC = () => {
 
     return (
         <div className={`page ${theme}`} style={{ padding: '20px' }}>
-            <h3>Аналитика:</h3>
             <AnalyticsInfo />
         </div>
     );

@@ -1,9 +1,9 @@
 import { Deal } from './shared/types/types';
 
-const API_BASE_URL_CLIENTS = 'http://localhost:3000/api/clients';
-const API_BASE_URL_DEALS = 'http://localhost:3000/api/deals';
-const API_BASE_URL_USERS = 'http://localhost:3000/api/users';
-const API_BASE_URL_ANALYTICS = 'http://localhost:3000/api/analytics';
+const API_BASE_URL_CLIENTS = 'http://192.168.56.181:3000/api/clients';
+const API_BASE_URL_DEALS = 'http://192.168.56.181:3000/api/deals';
+const API_BASE_URL_USERS = 'http://192.168.56.181:3000/api/users';
+const API_BASE_URL_ANALYTICS = 'http://192.168.56.181:3000/api/analytics';
 
 const getAccessToken = () => {
     return localStorage.getItem('accessToken');
@@ -62,11 +62,11 @@ export const createClient = async (clientData: any) => {
                 },
                 body: JSON.stringify(clientData),
             });
-            return await response.json();
+            return await response;
         }
-        return responseData;
+        return response;
     } catch (error) {
-        console.log(error);
+        return error;
     }
 };
 
@@ -162,8 +162,7 @@ export const updateClient = async (id: string, clientData: any) => {
             responseData.error === 'Отсутствует токен авторизации'
         ) {
             await refreshTokens();
-            // Retry the request after refreshing tokens
-            const response = await fetch(`${API_BASE_URL_CLIENTS}/${id}`, {
+            const retryResponse = await fetch(`${API_BASE_URL_CLIENTS}/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -171,11 +170,12 @@ export const updateClient = async (id: string, clientData: any) => {
                 },
                 body: JSON.stringify(clientData),
             });
-            return await response.json();
+            return await retryResponse.json();
         }
         return responseData;
     } catch (error) {
-        console.log(error);
+        console.error('Error updating client:', error);
+        throw error;
     }
 };
 
@@ -471,5 +471,139 @@ export const getReturningClients = async () => {
         return responseData;
     } catch (error) {
         console.log(error);
+    }
+};
+
+export const getDealsByClientId = async (clientId: string) => {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL_DEALS}/client/${clientId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            },
+        );
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(
+                `${API_BASE_URL_DEALS}/client/${clientId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${getAccessToken()}`,
+                    },
+                },
+            );
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const getDealById = async (id: string) => {
+    try {
+        const response = await fetch(`${API_BASE_URL_DEALS}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            // Retry the request after refreshing tokens
+            const response = await fetch(`${API_BASE_URL_DEALS}/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const updateDealClient = async (
+    dealId: string,
+    clientId: string,
+): Promise<void> => {
+    try {
+        const response = await fetch(`${API_BASE_URL_DEALS}/${dealId}/client`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update deal client');
+        }
+    } catch (error) {
+        console.error('Error updating deal client:', error);
+        throw error;
+    }
+};
+
+export const updateDeal = async (
+    dealId: string,
+    dealData: Partial<Deal>,
+): Promise<void> => {
+    try {
+        const response = await fetch(`${API_BASE_URL_DEALS}/${dealId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+            body: JSON.stringify(dealData),
+        });
+
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            // Retry the request after refreshing tokens
+            const response = await fetch(`${API_BASE_URL_DEALS}/${dealId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+                body: JSON.stringify(dealData),
+            });
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error updating deal:', error);
+        throw error;
+    }
+};
+
+export const deleteDeal = async (dealId: string): Promise<void> => {
+    try {
+        const response = await fetch(`${API_BASE_URL_DEALS}/${dealId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete deal');
+        }
+    } catch (error) {
+        console.error('Error deleting deal:', error);
+        throw error;
     }
 };

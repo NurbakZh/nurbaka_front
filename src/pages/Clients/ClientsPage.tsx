@@ -1,6 +1,6 @@
 import React from 'react';
-import ClientsListPage from '../components/Clients/ClientsListPage';
-import NavBar from '../shared/components/NavBar/NavBar';
+import NavBar from '../../shared/components/NavBar/NavBar';
+import ClientsListPage from './ClientsListPage';
 
 const ClientsPage: React.FC = () => {
     return (

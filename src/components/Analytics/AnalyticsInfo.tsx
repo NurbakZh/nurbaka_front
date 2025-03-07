@@ -10,7 +10,12 @@ import {
 } from '../../api';
 import { useThemeStore } from '../../shared/stores/theme';
 
-const AnalyticsInfo: React.FC = () => {
+interface AnalyticsInfoProps {
+    clients: number;
+    deals: number;
+}
+
+const AnalyticsInfo: React.FC<AnalyticsInfoProps> = ({ clients, deals } ) => {
     const theme = useThemeStore((x) => x.theme);
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -43,16 +48,19 @@ const AnalyticsInfo: React.FC = () => {
     if (error) return <Alert message={error} type="error" />;
 
     const styles = {
-        backgroundColor: theme === 'light' ? 'var(--primary-light)' : 'var(--secondary-dark)',
+        backgroundColor: theme === 'light' ? 'var(--card-light)' : 'var(--card-dark)', 
         color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
-        borderRadius: '10px',
+        borderRadius: '12px',
+        padding: '0px',
+        border: 'none',
         fontSize: '16px',
+        boxShadow: theme === 'light' ? '0px 4px 10px rgba(0, 0, 0, 0.2)' : '0px 4px 10px rgba(255, 255, 255, 0.1)',
         marginBottom: '10px',
     };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <Card style={styles} title={<Typography style={{ 
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ 
                 color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
                 fontSize: '18px',
                 fontWeight: 'bold',
@@ -62,19 +70,22 @@ const AnalyticsInfo: React.FC = () => {
                 <p>Всего Руб: {data[0]?.revenue.totalRub || 0} RUB</p>
                 <p>Всего Тон: {data[0]?.revenue.totalTon || 0} TON</p>
             </Card>
-            <Card style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold' }}>👥 Количество клиентов</Typography>} >
-                <p>Клиенты: {data[1]?.clients || 0}</p>
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold' }}>👥 Количество клиентов</Typography>} >
+                <p>Клиенты: {clients}</p>
             </Card>
-            <Card style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>✅ Закрытые сделки</Typography>} >
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold' }}>📊 Количество сделок</Typography>} >
+                <p>Сделки: {deals}</p>
+            </Card>
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>✅ Закрытые сделки</Typography>} >
                 <p>Закрытые сделки: {data[2]?.closedDeals || 0}</p>
             </Card>
-            <Card style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>💵 Средний чек</Typography>} >
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>💵 Средний чек</Typography>} >
                 <p>Средняя сумма: {data[3]?.averageCheck.averageAmount || 0} RUB</p>
             </Card>
-            <Card style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>💳 Общие долги</Typography>} >
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>💳 Общие долги</Typography>} >
                 <p>Общие долги: {data[4]?.debts.totalDebts || 0} RUB</p>
             </Card>
-            <Card style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>🔄 Возвращающиеся клиенты</Typography>} >
+            <Card className={`card ${theme}`} style={styles} title={<Typography style={{ color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)', fontSize: '18px', fontWeight: 'bold'   }}>🔄 Возвращающиеся клиенты</Typography>} >
                 <p>Средний процент: {data[5]?.returningClients.averagePercentage || 0}%</p>
             </Card>
         </div>

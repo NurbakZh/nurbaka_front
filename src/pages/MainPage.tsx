@@ -1,11 +1,28 @@
 import { MoonOutlined, SunOutlined } from '@ant-design/icons';
-import Link from 'antd/es/typography/Link';
-import React, { useEffect, useState } from 'react';
+import { Card, Typography } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getAllClients, getAllDeals } from '../api';
+import AnalyticsInfo from '../components/Analytics/AnalyticsInfo';
 import NavBar from '../shared/components/NavBar/NavBar';
 import { useThemeStore } from '../shared/stores/theme';
 
 const MainPage: React.FC = () => {
     const { setTheme } = useThemeStore();
+    const [totalClients, setTotalClients] = useState<number>(0);
+    const [totalDeals, setTotalDeals] = useState<number>(0);
+    useEffect(() => {
+        fetchClients();
+        fetchDeals();
+    }, []);
+    const fetchClients = useCallback(async () => {
+        const data = await getAllClients(10, 1);
+        setTotalClients(data.totalCount);
+    }, []);
+    const fetchDeals = useCallback(async () => {
+        const data = await getAllDeals(10, 1);
+        setTotalDeals(data.totalCount);
+    }, []);
     const theme = useThemeStore((x) => x.theme);
     const [user, setUser] = useState<{
         telegramId?: string;
@@ -25,7 +42,7 @@ const MainPage: React.FC = () => {
         }
         const postData = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/users', {
+                const response = await fetch('http://192.168.56.181:3000/api/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -45,34 +62,65 @@ const MainPage: React.FC = () => {
     }, []);
 
     return (
-        <div className={`page ${theme}`}>
-            <Link
-                style={{ 
-                    backgroundColor: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
-                    color: theme === 'light' ? 'var(--text-dark)' : 'var(--text-light)',
-                    borderRadius: '50%',
-                    padding: '10px',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-                onClick={() => {
-                    const newTheme = theme === 'light' ? 'dark' : 'light';
-                    setTheme(newTheme);
-                }}
-            >
-                {theme === 'light' ? <SunOutlined /> : <MoonOutlined />}
-            </Link>
+        <div 
+            className={`page ${theme}`} >
+            <div className='container' style={{
+            }}>
+                <h3>Данные Пользователя:</h3>
+                <Card className={`card ${theme}`} style={{ 
+                    padding: '12px',
+                    backgroundColor: theme === 'light' ? 'var(--card-light)' : 'var(--card-dark)', 
+                    border: 'none',
+                    color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
+                    borderRadius: '12px',
+                    marginBottom: '16px',
+                    boxShadow: theme === 'light' ? '0px 4px 10px rgba(0, 0, 0, 0.2)' : '0px 4px 10px rgba(255, 255, 255, 0.1)',
+                }}>
+                    <Link
+                        to={''}
+                        style={{
+                            backgroundColor: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
+                            color: theme === 'light' ? 'var(--text-dark)' : 'var(--text-light)',
+                            borderRadius: '12px',
+                            padding: '10px',
+                            width: '32px',
+                            marginBottom: '10px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }} onClick={() => {
+                            const newTheme = theme === 'light' ? 'dark' : 'light';
+                            setTheme(newTheme);
+                        } }                >
+                        {theme === 'light' ? <SunOutlined /> : <MoonOutlined />}
+                    </Link>
+                    <Typography className={`input-label ${theme} big`}>
+                        <strong>Имя пользователя:</strong> <b>{user?.username || 'Нет данных'}</b>
+                    </Typography>
+                    <Typography className={`input-label ${theme} big`}>
+                        <strong>Telegram ID:</strong> <b>{user?.telegramId || 'Нет данных'}</b>
+                    </Typography>
+                    <Typography className={`input-label ${theme} big`}>
+                        <strong>Номер телефона:</strong> <b>{user?.phoneNumber || 'Нет данных'}</b>
+                    </Typography>
+                    <Typography className={`input-label ${theme} big`}>
+                        <strong>Полное имя:</strong> <b>{user?.fullName || 'Нет данных'}</b>
+                    </Typography>
+                    <Typography className={`input-label ${theme} big`}>
+                        <strong>Роль:</strong> <b>{user?.role || 'Нет данных'}</b>
+                    </Typography>
+                </Card>
+                <Card style={{ 
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: theme === 'light' ? 'var(--text-light)' : 'var(--text-dark)',
+                    borderRadius: '32px',  
+                }}>
+                    <AnalyticsInfo clients={totalClients} deals={totalDeals} />
+                </Card>
+            </div>
             <NavBar />
-            <h2>Обзор API Эндпоинтов</h2>
-            <h3>Данные Пользователя</h3>
-            <p>Telegram ID: <b>{user?.telegramId || 'Нет данных'}</b></p>
-            <p>Имя пользователя: <b>{user?.username || 'Нет данных'}</b></p>
-            <p>Номер телефона: <b>{user?.phoneNumber || 'Нет данных'}</b></p>
-            <p>Полное имя: <b>{user?.fullName || 'Нет данных'}</b></p>
-            <p>Роль: <b>{user?.role || 'Нет данных'}</b></p>
         </div>
     );
 };

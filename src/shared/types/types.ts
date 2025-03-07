@@ -1,18 +1,18 @@
 export interface Client {
-    id: string;
-    userId: string;
-    name: string;
+    id?: string;
+    userId?: string;
+    name?: string;
     description: string;
-    tag: TagType;
+    tag: TagType | string;
     hasDeal: boolean;
-    createdAt: Date;
+    createdAt?: Date;
 }
 
 export interface Contact {
-    id: string;
-    clientId: string;
-    contactType: ContactType;
-    contact: string;
+    id?: string;
+    clientId?: string;
+    contactType?: ContactType | string;
+    contact?: string;
 }
 
 export interface ClientWithContacts {
@@ -21,13 +21,8 @@ export interface ClientWithContacts {
 }
 
 export enum ContactType {
-    EMAIL = 'Почта',
     PHONE = 'Телефон',
-    VK = 'VK',
     TELEGRAM = 'Телеграм',
-    WHATSAPP = 'WhatsApp',
-    INSTAGRAM = 'Instagram',
-    OTHER = 'Другой',
 }
 
 export enum ContactColor {
@@ -41,24 +36,24 @@ export enum ContactColor {
 }
 
 export enum TagType {
-    BASIC = 'Базовый',
-    PREMIUM = 'Премиум',
+    POTENTIAL = 'Потенциальный',
+    NEW = 'Новый',
     VIP = 'VIP',
-    PROBLEMATIC = 'Проблемный',
+    REGULAR = 'Постоянный',
 }
 
 export enum TagColor {
-    BASIC = 'blue',
-    PREMIUM = 'green',
+    POTENTIAL = 'blue',
+    NEW = 'green',
     VIP = 'yellow',
-    PROBLEMATIC = 'red',
+    REGULAR = 'purple',
 }
 
 export enum DealStatus {
-    IN_PROGRESS = 'IN_PROGRESS',
-    SUSPENDED = 'SUSPENDED',
-    SUCCESS = 'SUCCESS',
-    FAILED = 'FAILED',
+    IN_PROGRESS = 'В процессе',
+    SUSPENDED = 'Отложен',
+    SUCCESS = 'Успех',
+    FAILED = 'Неудача',
 }
 
 export interface Deal {
@@ -73,4 +68,29 @@ export interface Deal {
     income?: string;
     currency?: string;
     closedAt?: Date | null;
+    plannedTill?: Date | null;
+}
+
+export interface Notification {
+    id?: string;
+    userId?: string;
+    dealId?: string;
+    clientId?: string;
+    message: string;
+    reminderTime: Date;
+    type: NotificationType;
+    status: NotificationStatus;
+    createdAt: Date;
+    title: string;
+}
+
+export enum NotificationType {
+    REMINDER = 'Напоминание',
+    PAYMENT = 'Платеж',
+}
+
+export enum NotificationStatus {
+    ACTIVE = 'Активно',
+    DONE = 'Выполнено',
+    CANCELLED = 'Отменено',
 }

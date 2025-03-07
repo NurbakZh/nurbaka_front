@@ -1,6 +1,6 @@
 import React from 'react';
-import DealsListPage from '../components/Deals/DealsListPage';
-import NavBar from '../shared/components/NavBar/NavBar';
+import NavBar from '../../shared/components/NavBar/NavBar';
+import DealsListPage from './DealsListPage';
 
 const DealsPage: React.FC = () => {
     return (
