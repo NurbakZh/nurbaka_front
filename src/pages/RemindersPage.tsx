@@ -1,3 +1,4 @@
+import { PlusOutlined } from '@ant-design/icons';
 import { Button, Card, Collapse } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
@@ -82,11 +83,18 @@ const RemindersPage: React.FC = () => {
         </Card> */}
 
         {/* Add Reminder Button */}
-        <Button block type="primary" style={{
-          backgroundColor: 'var(--accent-blue)',
-          marginBottom: '16px',
-        }}>
-          + Добавить напоминание
+        <Button 
+          block 
+          type="primary" 
+          style={{ 
+            width: '100%', 
+            padding: '10px', 
+            backgroundColor: 'var(--accent-blue)',
+            fontSize: '16px', 
+            height: '40px' 
+          }}>
+          <PlusOutlined />
+          Добавить напоминание
         </Button>
 
         {/* Reminders List Grouped by Date */}

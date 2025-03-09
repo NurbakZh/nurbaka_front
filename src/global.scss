@@ -364,12 +364,14 @@ th.ant-table-cell {
         .ant-card-head {
             border-bottom: 1px solid var(--card-dark) !important;
             box-shadow: 0px 2px 10px rgba(40, 40, 40, 0.2) !important;
+            padding: 0px 12px !important;
         }
     }
     &.dark {
         .ant-card-head {
             border-bottom: 1px solid var(--card-light) !important;
             box-shadow: 0px 2px 10px rgba(185, 187, 188, 0.2) !important;
+            padding: 0px 12px !important;
         }
     }
 }
