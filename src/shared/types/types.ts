@@ -49,11 +49,32 @@ export enum TagColor {
     REGULAR = 'purple',
 }
 
+export enum PaymentStatus {
+    PAID = 'Оплачен',
+    UNPAID = 'Не оплачен',
+}
+
+export interface Payment {
+    userId?: string;
+    clientId?: string;
+    dealId?: string;
+    originalAmount?: string;
+    baseAmountRub?: string;
+    baseAmountUsd?: string;
+    paymentMethod?: string;
+    paymentUrl?: string;
+    status?: PaymentStatus | string;
+    paidAmount?: null;
+    createdAt?: Date;
+    paidAt?: null;
+}
+
 export enum DealStatus {
     IN_PROGRESS = 'В процессе',
     SUSPENDED = 'Отложен',
     SUCCESS = 'Успех',
     FAILED = 'Неудача',
+    WAITING_FOR_PAYMENT = 'Ожидает оплаты',
 }
 
 export interface Deal {
@@ -63,7 +84,7 @@ export interface Deal {
     clientName?: string;
     title?: string;
     notes?: string | null;
-    status?: DealStatus;
+    status?: DealStatus | string;
     createdAt?: Date;
     income?: string;
     currency?: string;
@@ -76,21 +97,34 @@ export interface Notification {
     userId?: string;
     dealId?: string;
     clientId?: string;
-    message: string;
-    reminderTime: Date;
-    type: NotificationType;
-    status: NotificationStatus;
-    createdAt: Date;
-    title: string;
+    message?: string;
+    reminderTime?: Date;
+    clientName?: string;
+    type?: NotificationType;
+    status?: NotificationStatus;
+    createdAt?: Date;
+    title?: string;
+    dealTitle?: string;
 }
 
 export enum NotificationType {
-    REMINDER = 'Напоминание',
-    PAYMENT = 'Платеж',
+    REMINDER = 'reminder',
+    PAYMENT = 'payment',
 }
 
 export enum NotificationStatus {
+    ACTIVE = 'active',
+    DONE = 'done',
+    CANCELLED = 'cancelled',
+}
+
+export enum NotificationStatusRu {
     ACTIVE = 'Активно',
     DONE = 'Выполнено',
     CANCELLED = 'Отменено',
+}
+
+export enum NotificationTypeRu {
+    REMINDER = 'Напоминание',
+    PAYMENT = 'Платеж',
 }

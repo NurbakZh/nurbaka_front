@@ -149,11 +149,13 @@ const ClientsListPage: React.FC = () => {
                             handleDeleteClient(client.id)
                         }}
                     >
-                    <Button 
-                        danger
-                        icon={<DeleteOutlined />}
-                    >Удалить</Button>
-                </Popconfirm>
+                        <Button 
+                            danger
+                            icon={<DeleteOutlined />}
+                        >
+                            Удалить
+                        </Button>
+                    </Popconfirm>
                 ) : null;
             },
         },

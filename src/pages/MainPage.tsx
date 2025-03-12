@@ -35,6 +35,7 @@ const MainPage: React.FC = () => {
     useEffect(() => {
         const someData = {
             telegramId: '5100432',
+            chatId: '795124425',
             username: '@nurba_zh',
             phoneNumber: '877473791938',
             fullName: 'Жомартов Нурбек',

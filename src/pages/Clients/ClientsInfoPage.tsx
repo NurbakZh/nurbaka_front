@@ -1,20 +1,26 @@
-import { EditOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Modal, Select, Spin, Tag, Typography } from 'antd';
+import { CalendarOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Card, DatePicker, Input, Modal, Popconfirm, Select, Spin, Tag, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import dayjs from 'dayjs';
+import { useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { getClientById, updateClient } from '../../api';
+import { addReminder, deleteClient, getClientById, updateClient } from '../../api';
 import NavBar from '../../shared/components/NavBar/NavBar';
 import { useThemeStore } from '../../shared/stores/theme';
-import { ClientWithContacts, ContactColor, ContactType, TagColor, TagType } from '../../shared/types/types';
+import { ClientWithContacts, ContactColor, ContactType, NotificationStatus, NotificationType, TagColor, TagType } from '../../shared/types/types';
 
 const ClientsInfoPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const theme = useThemeStore((state) => state.theme);    
     const [client, setClient] = useState<ClientWithContacts | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editedClient, setEditedClient] = useState<ClientWithContacts | null>(null);
+    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+    const [reminderDate, setReminderDate] = useState<Date | null>(null);
+    const [reminderMessage, setReminderMessage] = useState('');
+
 
     useEffect(() => {
         const fetchClient = async () => {
@@ -74,6 +80,29 @@ const ClientsInfoPage: React.FC = () => {
             </div>
         );
     }
+
+    const handleDeleteClient = async () => {
+        await deleteClient(id);
+        navigate('/clients');
+    };
+
+    const handleAddReminder = async () => {
+        if (!reminderDate || !reminderMessage) {
+            return;
+        }
+
+        await addReminder({
+            message: reminderMessage,
+            reminderTime: reminderDate,
+            status: NotificationStatus.ACTIVE,
+            type: NotificationType.REMINDER,
+            clientId: id,
+            clientName: client.client.name
+        } as Partial<Notification>);
+        setIsReminderModalOpen(false);
+        setReminderDate(null);
+        setReminderMessage('');
+    };
 
     return (
         <div className={`page ${theme}`} style={{ 
@@ -165,21 +194,63 @@ const ClientsInfoPage: React.FC = () => {
                             </div>
                         </Typography>
                     </div>
-                    <Button 
-                        icon={<EditOutlined />}
-                        type="primary"
-                        style={{ 
-                            backgroundColor: theme === 'light' ? 'var(--button-light)' : 'var(--button-dark)', 
-                            color: theme === 'dark' ? 'var(--text-dark)' : 'var(--text-dark)',
-                            marginTop: '16px',
-                            height: '28px',
-                            width: '60%',
-                            boxShadow: 'none'
-                         }}
-                        onClick={() => setIsEditModalOpen(true)}
-                    >
-                        Редактировать
-                    </Button>
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        justifyContent: 'center', 
+                        flexDirection: 'column',
+                        gap: '4px'
+                    }}>
+                        <Button 
+                            icon={<EditOutlined />}
+                            type="primary"
+                            style={{ 
+                                backgroundColor: theme === 'light' ? 'var(--button-light)' : 'var(--button-dark)', 
+                                color: theme === 'dark' ? 'var(--text-dark)' : 'var(--text-dark)',
+                                marginTop: '16px',
+                                height: '28px',
+                                width: '70%',
+                                boxShadow: 'none',
+                            }}
+                            onClick={() => setIsEditModalOpen(true)}
+                        >
+                            Редактировать
+                        </Button>
+                        {!client.client.hasDeal ? <Popconfirm
+                            arrow={false}
+                            title={"Вы уверены что хотите удалить клиента?"}
+                            onConfirm={() => {
+                                handleDeleteClient();
+                            }}
+                        >
+                            <Button 
+                                danger
+                                icon={<DeleteOutlined />}
+                                type="primary"
+                                style={{ 
+                                    height: '28px',
+                                    width: '70%',
+                                    boxShadow: 'none',
+                                }}
+                            >
+                                Удалить клиента
+                            </Button>
+                        </Popconfirm> : null}
+                        <Button 
+                            icon={<CalendarOutlined />}
+                            type="primary"
+                            style={{ 
+                                backgroundColor: 'var(--accent-blue)', 
+                                color: 'var(--text-dark)',
+                                height: '28px',
+                                width: '70%',
+                                boxShadow: 'none',
+                            }}
+                            onClick={() => setIsReminderModalOpen(true)}
+                        >
+                            Добавить напоминание
+                        </Button>
+                    </div>
                 </Card>
             </div>
 
@@ -310,6 +381,49 @@ const ClientsInfoPage: React.FC = () => {
                         </Button>
                     </div>
                 )}
+            </Modal>
+            <Modal
+                className={`modal-${theme}`}
+                open={isReminderModalOpen}
+                title={<Typography className="modal-title">Создание напоминания</Typography>}
+                footer={[
+                    <Button
+                        danger
+                        key="cancel" 
+                        onClick={() => setIsReminderModalOpen(false)}
+                    >
+                        Отмена
+                    </Button>,
+                    <Button 
+                        key="save" 
+                        style={{ backgroundColor: 'var(--accent-blue)' }} 
+                        type="primary"
+                        onClick={handleAddReminder}
+                    >
+                        Создать
+                    </Button>
+                ]}
+                onCancel={() => setIsReminderModalOpen(false)}
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                        <Typography className="input-label">Дата и время</Typography>
+                        <DatePicker
+                            format="YYYY-MM-DD HH:mm:ss"
+                            showTime={{ defaultValue: dayjs('00:00:00', 'HH:mm:ss') }}
+                            style={{ width: '100%' }}  
+                            onChange={(date) => setReminderDate(date.toDate())}
+                        />
+                    </div>
+                    <div>
+                        <Typography className="input-label">Сообщение</Typography>
+                        <Input.TextArea
+                            placeholder="Введите текст напоминания"
+                            value={reminderMessage}
+                            onChange={(e) => setReminderMessage(e.target.value)}
+                        />
+                    </div>
+                </div>
             </Modal>
             <NavBar />
         </div>

@@ -1,11 +1,12 @@
-import { EditOutlined } from '@ant-design/icons';
-import { Button, Card, Form, Input, Modal, Select, Spin, Tag, Typography, message } from 'antd';
+import { CalendarOutlined, CloseOutlined, CheckOutlined, DeleteOutlined, EditOutlined, DollarCircleOutlined, RedoOutlined } from '@ant-design/icons';
+import { Button, Card, DatePicker, Form, Input, Modal, Select, Spin, Tag, Typography, message } from 'antd';
 import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deleteDeal, getAllClients, getDealById, updateDeal } from '../../api';
+import { addReminder, createPayment, getAllClients, getDealById, updateDeal } from '../../api';
 import NavBar from '../../shared/components/NavBar/NavBar';
 import { useThemeStore } from '../../shared/stores/theme';
-import { ClientWithContacts, Deal, DealStatus } from '../../shared/types/types';
+import { ClientWithContacts, Deal, DealStatus, NotificationStatus, NotificationType } from '../../shared/types/types';
 
 const DealsInfoPage: React.FC = () => {
     const theme = useThemeStore((state) => state.theme);
@@ -14,9 +15,10 @@ const DealsInfoPage: React.FC = () => {
     const [deal, setDeal] = useState<Deal | null>(null);
     const [loading, setLoading] = useState(true);
     const [clients, setClients] = useState<ClientWithContacts[]>([]);
-    const [editingClient, setEditingClient] = useState(false);
     const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
-    const [isDeleteModalVisible, setIsDeleteModalOpen] = useState(false);
+    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+    const [reminderDate, setReminderDate] = useState<Date | null>(null);
+    const [reminderMessage, setReminderMessage] = useState('');
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -53,6 +55,36 @@ const DealsInfoPage: React.FC = () => {
         }
     };
 
+    const handlePutOnHold = async () => {
+        try {
+            await updateDeal(id, { status: "SUSPENDED" });
+            await fetchDeal();
+            message.success('Сделка успешно отложена');
+        } catch (error) {
+            message.error('Ошибка при отложении сделки');
+        }
+    };
+
+    const handleCompleteDeal = async () => {
+        try {
+            await updateDeal(id, { status: "SUCCESS" });
+            await fetchDeal();
+            message.success('Сделка успешно завершена');
+        } catch (error) {
+            message.error('Ошибка при завершении сделки');
+        }
+    };
+
+    const handleCancelDeal = async () => {
+        try {
+            await updateDeal(id, { status: "FAILED" });
+            await fetchDeal();
+            message.success('Сделка успешно отменена');
+        } catch (error) {
+            message.error('Ошибка при отмене сделки');
+        }
+    };
+
     const handleEdit = async (values: any) => {
         try {
             const clientName = clients.find(client => client.client.id === values.clientId)?.client.name;
@@ -65,14 +97,59 @@ const DealsInfoPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async () => {
+    const handleCreateInvoice = async () => {
         try {
-            await deleteDeal(id);
-            message.success('Сделка успешно удалена');
-            navigate('/deals');
+            const originalAmount = deal?.currency === 'RUB' ? Number(deal?.income) / 242 : deal?.currency === 'USD' ? Number(deal?.income) / 2.72 : Number(deal?.income);
+            const baseAmountRub = deal?.currency === 'RUB' ? Number(deal?.income) : deal?.currency === 'USD' ? Number(deal?.income) * 87 : Number(deal?.income) * 242;
+            const baseAmountUsd = deal?.currency === 'RUB' ? Number(deal?.income) / 87 : deal?.currency === 'USD' ? Number(deal?.income) : Number(deal?.income) * 2.72;
+            await createPayment({
+                dealId: id,
+                clientId: deal?.clientId,
+                createdAt: deal?.createdAt,
+                originalAmount: originalAmount.toString(),
+                baseAmountRub: baseAmountRub.toString(),
+                baseAmountUsd: baseAmountUsd.toString(),
+                paymentMethod: 'card',
+                paymentUrl: 'pay.com',
+                status: "UNPAID",
+                paidAmount: null,
+                paidAt: null,
+            });
+            await fetchDeal();
+            message.success('Счет успешно выставлен');
         } catch (error) {
-            message.error('Ошибка при удалении сделки');
+            message.error('Ошибка при выставлении счета');
         }
+    };
+
+    const handleRestore = async () => {
+        try {
+            await updateDeal(id, { status: "IN_PROGRESS" });
+            await fetchDeal();
+            message.success('Сделка успешно восстановлена');
+        } catch (error) {
+            message.error('Ошибка при восстановлении сделки');
+        }
+    };
+
+    const handleAddReminder = async () => {
+        if (!reminderDate || !reminderMessage) {
+            return;
+        }
+
+        await addReminder({
+            message: reminderMessage,
+            reminderTime: reminderDate,
+            status: NotificationStatus.ACTIVE,
+            type: NotificationType.REMINDER,
+            dealId: id,
+            dealTitle: deal?.title,
+            clientId: deal?.clientId,
+            clientName: deal?.clientName
+        } as Partial<Notification>);
+        setIsReminderModalOpen(false);
+        setReminderDate(null);
+        setReminderMessage('');
     };
 
     if (loading) {
@@ -141,7 +218,7 @@ const DealsInfoPage: React.FC = () => {
                             <strong>Статус:</strong>
                             <span>
                             <Tag 
-                                color={DealStatus[deal.status as unknown as keyof typeof DealStatus] === 'В процессе' ? 'blue' : deal.status === 'Отложен' ? 'yellow' : deal.status === 'Успех' ? 'green' : 'red'}
+                                color={deal.status === 'IN_PROGRESS' ? 'blue' : deal.status === 'SUSPENDED' ? 'orange' : deal.status === 'SUCCESS' ? 'green' : deal.status === 'WAITING_FOR_PAYMENT' ? 'yellow' : 'red'}
                                 style={{ fontSize: '14px' }}>
                                 {DealStatus[deal.status as unknown as keyof typeof DealStatus]}
                             </Tag>
@@ -204,21 +281,123 @@ const DealsInfoPage: React.FC = () => {
                             </Typography>
                         </div>
                     </div>
-                    <Button 
-                        icon={<EditOutlined />}
-                        type="primary"
-                        style={{ 
-                            backgroundColor: theme === 'light' ? 'var(--button-light)' : 'var(--button-dark)', 
-                            color: theme === 'dark' ? 'var(--text-dark)' : 'var(--text-dark)',
-                            marginTop: '16px',
-                            height: '28px',
-                            width: '60%',
-                            boxShadow: 'none'
-                         }}
-                        onClick={() => setIsEditingModalOpen(true)}
-                    >
-                        Редактировать
-                    </Button>
+                    <div style={{
+                        display: 'flex', 
+                        alignItems: 'center',
+                        justifyContent: 'center', 
+                        flexDirection: 'column',
+                        gap: '4px'
+                    }}>
+                        <Button 
+                            icon={<EditOutlined />}
+                            type="primary"
+                            style={{ 
+                                backgroundColor: theme === 'light' ? 'var(--button-light)' : 'var(--button-dark)', 
+                                color: theme === 'dark' ? 'var(--text-dark)' : 'var(--text-dark)',
+                                marginTop: '16px',
+                                height: '28px',
+                                width: '60%',
+                                boxShadow: 'none'
+                            }}
+                            onClick={() => setIsEditingModalOpen(true)}
+                        >
+                            Редактировать
+                        </Button>
+                        {deal.status === "IN_PROGRESS" && 
+                            <Button 
+                                danger
+                                icon={<CloseOutlined />}
+                                type="primary"
+                                style={{ 
+                                    color: 'var(--text-dark)',
+                                    height: '28px',
+                                    width: '60%',
+                                    boxShadow: 'none'
+                                }}
+                                onClick={() => handlePutOnHold()}
+                            >
+                                Отложить
+                            </Button>
+                        }
+                        {deal.status === "IN_PROGRESS" && 
+                            <Button 
+                                icon={<DollarCircleOutlined />}
+                                type="primary"
+                                style={{ 
+                                    backgroundColor: 'var(--accent-yellow)', 
+                                    color: 'var(--text-dark)',
+                                    height: '28px',
+                                    width: '60%',
+                                    boxShadow: 'none'
+                                }}
+                                onClick={() => handleCreateInvoice()}
+                            >
+                                Выставить счет
+                            </Button>
+                        }
+                        {deal.status === "SUSPENDED" && 
+                            <Button
+                                icon={<RedoOutlined />}
+                                type="primary"
+                                style={{ 
+                                    backgroundColor: 'var(--success-green)', 
+                                    color: 'var(--text-dark)',
+                                    height: '28px',
+                                    width: '60%',
+                                    boxShadow: 'none'
+                                }}
+                                onClick={() => handleRestore()}
+                            >
+                                Восстановить
+                            </Button>
+                        }
+                        {deal.status === "WAITING_FOR_PAYMENT" && 
+                            <Button 
+                                icon={<CheckOutlined />}
+                                type="primary"
+                                style={{ 
+                                    backgroundColor: 'var(--success-green)', 
+                                    color: 'var(--text-dark)',
+                                    height: '28px',
+                                    width: '60%',
+                                    boxShadow: 'none'
+                                }}
+                                onClick={() => handleCompleteDeal()}
+                            >
+                                Завершить сделку
+                            </Button>
+                        }
+                        {deal.status === "WAITING_FOR_PAYMENT" && 
+                            <Button 
+                                icon={<DeleteOutlined />}
+                                type="primary"
+                                style={{ 
+                                    backgroundColor: 'var(--error-red)', 
+                                    color: 'var(--text-dark)',
+                                    height: '28px',
+                                    width: '60%',
+                                    boxShadow: 'none'
+                                }}
+                                onClick={() => handleCancelDeal()}
+                            >
+                                Отменить сделку
+                            </Button>
+                        }
+                        <Button 
+                            icon={<CalendarOutlined />}
+                            type="primary"
+                            style={{ 
+                                backgroundColor: 'var(--accent-blue)', 
+                                color: 'var(--text-dark)',
+                                height: '28px',
+                                width: '60%',
+                                boxShadow: 'none'
+                            }}
+                            onClick={() => setIsReminderModalOpen(true)}
+                        >
+                            Добавить напоминание
+                        </Button>
+                    </div>
                 </Card>
             </div>
             <Modal
@@ -307,6 +486,50 @@ const DealsInfoPage: React.FC = () => {
                         </Form.Item>
                     </div>
                 </Form>
+            </Modal>
+            <Modal
+                className={`modal-${theme}`}
+                open={isReminderModalOpen}
+                style={{ width: '400px' }}
+                title={<Typography className="modal-title">Создание напоминания</Typography>}
+                footer={[
+                    <Button
+                        danger
+                        key="cancel" 
+                        onClick={() => setIsReminderModalOpen(false)}
+                    >
+                        Отмена
+                    </Button>,
+                    <Button 
+                        key="save" 
+                        style={{ backgroundColor: 'var(--accent-blue)' }} 
+                        type="primary"
+                        onClick={handleAddReminder}
+                    >
+                        Создать
+                    </Button>
+                ]}
+                onCancel={() => setIsReminderModalOpen(false)}
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                        <Typography className="input-label">Дата и время</Typography>
+                        <DatePicker
+                            format="YYYY-MM-DD HH:mm:ss"
+                            showTime={{ defaultValue: dayjs('00:00:00', 'HH:mm:ss') }}
+                            style={{ width: '100%' }}  
+                            onChange={(date) => setReminderDate(date.toDate())}
+                        />
+                    </div>
+                    <div>
+                        <Typography className="input-label">Сообщение</Typography>
+                        <Input.TextArea
+                            placeholder="Введите текст напоминания"
+                            value={reminderMessage}
+                            onChange={(e) => setReminderMessage(e.target.value)}
+                        />
+                    </div>
+                </div>
             </Modal>
             <NavBar />
         </div>

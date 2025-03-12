@@ -1,9 +1,14 @@
-import { Deal } from './shared/types/types';
+import { Deal, Payment } from './shared/types/types';
 
 const API_BASE_URL_CLIENTS = 'http://192.168.56.181:3000/api/clients';
 const API_BASE_URL_DEALS = 'http://192.168.56.181:3000/api/deals';
 const API_BASE_URL_USERS = 'http://192.168.56.181:3000/api/users';
 const API_BASE_URL_ANALYTICS = 'http://192.168.56.181:3000/api/analytics';
+const API_BASE_URL_NOTIFICATIONS =
+    'http://192.168.56.181:3000/api/notifications';
+const API_BASE_URL_INVOICES =
+    'http://192.168.56.181:3000/api/payments';
+
 
 const getAccessToken = () => {
     return localStorage.getItem('accessToken');
@@ -248,6 +253,7 @@ export const getAllDeals = async (
     clientId?: string,
     income?: string,
     currency?: string,
+    status?: string,
 ) => {
     try {
         const queryParams = new URLSearchParams();
@@ -257,6 +263,7 @@ export const getAllDeals = async (
         if (clientId) queryParams.append('clientId', clientId);
         if (income) queryParams.append('income', income);
         if (currency) queryParams.append('currency', currency);
+        if (status) queryParams.append('status', status);
 
         const response = await fetch(
             API_BASE_URL_DEALS + `?${queryParams.toString()}`,
@@ -604,6 +611,254 @@ export const deleteDeal = async (dealId: string): Promise<void> => {
         }
     } catch (error) {
         console.error('Error deleting deal:', error);
+        throw error;
+    }
+};
+
+export const addReminder = async (reminderData: Partial<Notification>) => {
+    try {
+        const response = await fetch(`${API_BASE_URL_NOTIFICATIONS}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+            body: JSON.stringify(reminderData),
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(`${API_BASE_URL_NOTIFICATIONS}/`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+                body: JSON.stringify(reminderData),
+            });
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error adding reminder:', error);
+        throw error;
+    }
+};
+
+export const getReminders = async (dateFrom?: string, dateTo?: string) => {
+    try {
+        const queryParams = new URLSearchParams();
+        if (dateFrom) queryParams.append('dateFrom', dateFrom);
+        if (dateTo) queryParams.append('dateTo', dateTo);
+
+        const response = await fetch(
+            `${API_BASE_URL_NOTIFICATIONS}/?${queryParams}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            },
+        );
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(
+                `${API_BASE_URL_NOTIFICATIONS}/?${queryParams}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${getAccessToken()}`,
+                    },
+                },
+            );
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error getting reminders:', error);
+        throw error;
+    }
+};
+
+export const createInvoice = async (dealId: string) => {
+    try {
+        const response = await fetch(`${API_BASE_URL_INVOICES}`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(`${API_BASE_URL_INVOICES}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+        throw error;
+    }
+};
+
+export const createPayment = async (paymentData: Partial<Payment>) => {
+    try {
+        const response = await fetch(`${API_BASE_URL_INVOICES}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+            body: JSON.stringify(paymentData),
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const retryResponse = await fetch(`${API_BASE_URL_INVOICES}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+                body: JSON.stringify(paymentData),
+            });
+            return await retryResponse.json();
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error creating payment:', error);
+        throw error;
+    }
+};
+
+export const getDealDynamics = async (dynamic: string) => {
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('period', dynamic);
+
+        const response = await fetch(`${API_BASE_URL_ANALYTICS}/deal-dynamics?${queryParams.toString()}`, {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(`${API_BASE_URL_ANALYTICS}/deal-dynamics?${queryParams.toString()}`, {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData.dealDynamics;
+    } catch (error) {
+        console.error('Error fetching deal dynamics:', error);
+        throw error;
+    }
+};
+
+export const getRevenueAnalytics = async (period: string    ) => {
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('period', period);
+
+        const response = await fetch(API_BASE_URL_ANALYTICS + '/revenue-analytics?' + queryParams.toString(), {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(API_BASE_URL_ANALYTICS + '/revenue-analytics?' + queryParams.toString(), {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData.revenueAnalytics;
+    } catch (error) {
+        console.error('Error fetching revenue analytics:', error);
+        throw error;
+    }
+};
+
+export const getSalesFunnelData = async () => {
+    try {
+        const response = await fetch(API_BASE_URL_ANALYTICS + '/sales-funnel', {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(API_BASE_URL_ANALYTICS + '/sales-funnel', {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData.salesFunnel;
+    } catch (error) {
+        console.error('Error fetching sales funnel data:', error);
+        throw error;
+    }
+};
+
+export const getClientReturnRate = async (period: string) => {
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('period', period);
+
+        const response = await fetch(API_BASE_URL_ANALYTICS + '/client-return-rate?' + queryParams.toString(), {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`,
+            },
+        });
+        const responseData = await response.json();
+        if (
+            response.status === 401 ||
+            responseData.error === 'Отсутствует токен авторизации'
+        ) {
+            await refreshTokens();
+            const response = await fetch(API_BASE_URL_ANALYTICS + '/client-return-rate?' + queryParams.toString(), {
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                },
+            });
+            return await response.json();
+        }
+        return responseData.clientReturnRate;
+    } catch (error) {
+        console.error('Error fetching client return rate:', error);
         throw error;
     }
 };

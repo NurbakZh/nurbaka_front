@@ -1,4 +1,4 @@
-import { CalendarOutlined, CreditCardOutlined, FileOutlined, HomeOutlined, UserOutlined } from '@ant-design/icons';
+import { BarChartOutlined, CalendarOutlined, FileOutlined, HomeOutlined, UserOutlined } from '@ant-design/icons';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useThemeStore } from '../../stores/theme';
@@ -21,17 +21,17 @@ const NavBar: React.FC = () => {
                 <FileOutlined />
                 Сделки
             </Link>
-            {/* <Link className={`navbar-item ${theme}`} to='/analytics'>
-                <BarChartOutlined />
-                Аналитика
-            </Link> */}
             <Link className={`navbar-item ${theme}`} to='/reminders'>
                 <CalendarOutlined />
                 Напоминания
             </Link>
-            <Link className={`navbar-item ${theme}`} to='/payments' >
+            {/* <Link className={`navbar-item ${theme}`} to='/payments' >
                 <CreditCardOutlined />
                 Платежи
+            </Link> */}
+            <Link className={`navbar-item ${theme}`} to='/analytics'>
+                <BarChartOutlined />
+                Аналитика
             </Link>
         </div>
     );

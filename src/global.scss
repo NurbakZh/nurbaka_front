@@ -402,6 +402,38 @@ th.ant-table-cell {
     }
 }
 
+@media (max-width: 992px) {
+    .ant-picker-panel:last-child .ant-picker-date-panel {
+      display: none !important;
+    }
+  
+    .ant-picker-panel:first-child
+      .ant-picker-date-panel
+      .ant-picker-header-next-btn,
+    .ant-picker-panel:first-child
+      .ant-picker-date-panel
+      .ant-picker-header-super-next-btn {
+      visibility: initial !important;
+    }
+  
+    .ant-picker-panel.ant-picker-range-wrapper {
+      min-width: 288px !important;
+    }
+  
+    .ant-picker-presets {
+      display: none !important;
+    }
+
+    .ant-picker-datetime-panel {
+        .ant-picker-date-panel {
+            width: 50vw !important;
+        }
+        .ant-picker-body {
+            padding: 4px !important;
+        }
+    }
+}
+
 :root {
     --background-dark: #000000;
     --background-light: #FFFFFF;
@@ -412,7 +444,7 @@ th.ant-table-cell {
     --secondary-dark-hover: #3a3939;
     --text-light: #000000;
     --text-dark: #FFFFFF;
-    --border-gray: #E0E0E0;
+    --border-gray: #706b6b;
     --accent-blue: #3A8DFF;
     --success-green: #28A745;
     --error-red: #DC3545;
@@ -420,6 +452,7 @@ th.ant-table-cell {
     --card-light: #e9ebec;
     --button-light: #6C757D;
     --button-dark: #6C757D;
+    --accent-yellow: #e7b100;
 }
 
 .page {
@@ -475,3 +508,4 @@ th.ant-table-cell {
         padding: 20px 30vw;
     }
 }
+

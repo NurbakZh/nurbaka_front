@@ -28,19 +28,21 @@ const DealsListPage: React.FC = () => {
     const [incomeFilter, setIncomeFilter] = useState('');
     const [currencyFilter, setCurrencyFilter] = useState('');
     const [plannedTill, setPlannedTill] = useState<Date | null>(null);
+    const [statusFilter, setStatusFilter] = useState('');
 
     useEffect(() => {
         fetchDeals(
             titleFilter,
             clientIdFilter,
             incomeFilter,
-            currencyFilter
+            currencyFilter,
+            statusFilter
         );
         fetchClients();
-    }, [titleFilter, clientIdFilter, incomeFilter, currencyFilter]);
+    }, [titleFilter, clientIdFilter, incomeFilter, currencyFilter, statusFilter]);
 
-    const fetchDeals = useCallback(async (title?: string, clientId?: string, income?: string, currency?: string) => {
-        const data = await getAllDeals(page, size, title, clientId, income, currency);
+    const fetchDeals = useCallback(async (title?: string, clientId?: string, income?: string, currency?: string, status?: string) => {
+        const data = await getAllDeals(page, size, title, clientId, income, currency, status);
         setDeals(data.data);
         setTotal(data.totalCount);
     }, [page, size]);
@@ -74,7 +76,7 @@ const DealsListPage: React.FC = () => {
         { title: 'Статус', dataIndex: 'status', key: 'status', width: '160px', 
             render: (text: string) => {
                 return <Tag 
-                    color={DealStatus[text as keyof typeof DealStatus] === 'В процессе' ? 'blue' : text === 'Отложен' ? 'yellow' : text === 'Успех' ? 'green' : 'red'}>
+                        color={text === 'IN_PROGRESS' ? 'blue' : text === 'SUSPENDED' ? 'orange' : text === 'SUCCESS' ? 'green' : text === 'WAITING_FOR_PAYMENT' ? 'yellow' : 'red'}>
                         {DealStatus[text as keyof typeof DealStatus]}
                     </Tag>
             }},
@@ -122,6 +124,7 @@ const DealsListPage: React.FC = () => {
                             changeClient={setClientIdFilter}
                             changeCurrency={setCurrencyFilter}
                             changeIncome={setIncomeFilter}
+                            changeStatus={setStatusFilter}
                             changeTitle={setTitleFilter}
                             clients={clients.map(client => ({ id: client.client.id, name: client.client.name }))}
                         />,
